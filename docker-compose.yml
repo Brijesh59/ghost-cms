@@ -1,0 +1,49 @@
+version: "3"
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: admin123
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  ghost:
+    image: ghost:latest
+    restart: always
+    environment:
+      url: https://blog.whitechalk.xyz
+      database__client: mysql
+      database__connection__host: db
+      database__connection__user: root
+      database__connection__password: admin123
+      database__connection__database: ghost
+
+      mail__transport: SMTP
+      mail__options__host: smtp.zoho.in
+      mail__options__port: 465
+      mail__options__auth__user: mail__options__auth__user
+      mail__options__auth__pass: mail__options__auth__pass
+      mail__from: mail__from
+
+      NODE_ENV: production
+    volumes:
+      - /opt/ghost_content:/var/lib/ghost/content
+    depends_on:
+      - db
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - ghost
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /usr/share/nginx/html:/usr/share/nginx/html
+
+volumes:
+  dbdata:
